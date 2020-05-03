@@ -42,12 +42,13 @@ User_website = ""
 '''
 
 
-def login(username, password, puid, group_id, is_trans):
+def login(username, password, puid, group_id, is_trans,article_id):
     global session
     start_json = {
         "puid": puid,
         "group_id": group_id,
-        "is_trans": is_trans
+        "is_trans": is_trans,
+        "article_id": article_id
     }
     session = requests.session()
     header = get_html_header("https://www.yiban.cn/login")
@@ -73,13 +74,13 @@ def login(username, password, puid, group_id, is_trans):
                 code = wirte_code("yanzhengma.jpg")
                 print("使用了验证码，验证码是:", code)
                 if code == 1:
-                    login(username=username, password=password, puid=puid, group_id=group_id, is_trans=is_trans)
+                    login(username=username, password=password, puid=puid, group_id=group_id, is_trans=is_trans,article_id=article_id)
                     return
                 else:
                     login_json = json.loads(login_request(
                         username, encrypt_password, code, data_keys_time))
                 if login_json['code'] == '201':
-                    login(username=username, password=password, puid=puid, group_id=group_id, is_trans=is_trans)
+                    login(username=username, password=password, puid=puid, group_id=group_id, is_trans=is_trans,article_id=article_id)
                     return
                 elif login_json['code'] == 200:
                     start(start_json)
@@ -185,6 +186,7 @@ def start(start_json):
     global Channel_id
     global Puid
     global Actor_id
+    article_id=start_json['article_id']
     Group_id = start_json['group_id']
     Puid = start_json['puid']
     print("模拟登陆成功")
@@ -201,9 +203,10 @@ def start(start_json):
     # 循环
     for i in range(1):
         # 发布动态
-        addFeed()
+        #addFeed()
+        addReply(article_id)
         # 添加话题
-        addTopic()
+        #addTopic()
         # 网站\客户端查看(个人/公共/机构账号)主页
         addPersonWebsite()
         # 博文添加
@@ -211,7 +214,7 @@ def start(start_json):
         # 添加易喵喵
         addYiMiaoMiao()
         # 添加投票
-        add_vote()
+        #add_vote()
         # 网薪转账 函数内部自带判断是否转移
         # givePresent(info)
         print("当前用户[" + Nick + "] 第" + str(i + 1) + "轮执行")
@@ -378,6 +381,26 @@ def addTopic():
           addAjax.json()["message"])
     return Add_Topic.json()['message']
 
+#回复并点赞指定话题
+def addReply(article_id):
+    content = YiYan()
+    addAjaxFromData = {
+        "channel_id": Channel_id,
+        "puid": Puid,
+        "article_id": article_id,
+        "content": content,
+        "reply_id": 0,
+        "syncFeed": 1,
+        "isAnonymous": 0
+    }
+    addAjax = session.post("https://www.yiban.cn/forum/reply/addAjax", data=addAjaxFromData, timeout=10)
+    upArticleFromData = {
+        "article_id": article_id,
+        "channel_id": Channel_id,
+        "puid": Puid
+    }
+    upArticle = session.post("https://www.yiban.cn/forum/article/upArticleAjax", data=upArticleFromData, timeout=10)
+    print("评论话题:",addAjax.json()["message"],"\t点赞话题:", upArticle.json()["message"])
 
 # 添加投票
 def add_vote():
@@ -436,7 +459,7 @@ def givePresent(info):
 
 # 一言
 def YiYan():
-    url = "https://v1.hitokoto.cn/"
+    url = "https://v1.hitokoto.cn/?c=k&c=i"
     try:
         data = urllib.request.urlopen(url)
         jsdate = json.loads(data.read())

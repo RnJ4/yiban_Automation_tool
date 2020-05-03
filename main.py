@@ -3,8 +3,8 @@ import EGPA_script_random_num
 import pandas as pd
 
 
-def login(username, password, puid, group_id, is_trans):
-    EGPA_script_random_num.login(username=username, password=password, puid=puid, group_id=group_id,is_trans=is_trans)
+def login(username, password, puid, group_id, is_trans,article_id):
+    EGPA_script_random_num.login(username=username, password=password, puid=puid, group_id=group_id,is_trans=is_trans,article_id=article_id)
 
 
 def func():
@@ -15,12 +15,13 @@ def func():
     group_id = data.get("group_id")
     username = data.get("username")
     is_trans = data.get("trans")
+    article_id = data.get("article_id")
 
     for i in range(data.__len__()):
         try:
             print(username[i] + " Start")
             t = threading.Thread(target=EGPA_script_random_num.login,
-                                 args=(name[i], password[i], puid[i], group_id[i], is_trans[i]))
+                                 args=(name[i], password[i], puid[i], group_id[i], is_trans[i],article_id[i]))
             # t.setDaemon(True)
             t.start()
             t.join(150)
